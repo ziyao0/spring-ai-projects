@@ -1,0 +1,64 @@
+pluginManagement {
+    repositories {
+        maven {
+            url 'https://plugins.gradle.org/m2/'
+        }
+        gradlePluginPortal()
+        maven {
+            url 'https://maven.aliyun.com/repository/spring/'
+        }
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/spring/'
+        }
+        maven {
+            url 'https://repo.spring.io/milestone'
+        }
+        mavenCentral()
+    }
+}
+
+rootProject.name = 'spring-ai-projects'
+
+
+def buildFiles = fileTree(rootDir) {
+    def excludes = gradle.startParameter.projectProperties.get("excludeProjects")?.split(",")
+    include "**/*.gradle", "**/*.gradle.kts"
+    exclude "build", "**/gradle", "settings.gradle", "buildSrc", "/build.gradle", ".*", "out"
+    if (excludes) {
+        exclude excludes
+    }
+}
+
+buildFiles.forEach { buildFile ->
+    def isDefaultName = buildFile.name == "build.gradle" || buildFile.name == "build.gradle.kts"
+    def isKotlin = buildFile.name.endsWith ".kts"
+    if (isDefaultName) {
+        def buildFilePath = buildFile.parentFile.absolutePath
+        def projectPath = buildFilePath.replace((String) rootDir.absolutePath, "").replace(File.separator, ":")
+        include projectPath
+    } else {
+        def projectName
+        if (isKotlin) {
+            projectName = buildFile.name.replace(".gradle.kts", "")
+        } else {
+            projectName = buildFile.name.replace(".gradle", "")
+        }
+
+
+        def projectPath = ":$projectName"
+        include projectPath
+
+        def project = findProject(projectPath)
+        project.name = projectName
+        project.projectDir = buildFile.parentFile
+        project.buildFileName = buildFile.name
+    }
+}
