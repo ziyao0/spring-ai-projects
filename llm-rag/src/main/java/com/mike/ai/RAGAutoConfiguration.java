@@ -4,6 +4,7 @@ import com.mike.ai.chat.AssistantChat;
 import dev.langchain4j.community.model.dashscope.QwenChatModel;
 import dev.langchain4j.community.model.dashscope.QwenEmbeddingModel;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.internal.Utils;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -11,9 +12,10 @@ import dev.langchain4j.rag.content.retriever.ContentRetriever;
 import dev.langchain4j.rag.content.retriever.EmbeddingStoreContentRetriever;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.store.embedding.EmbeddingStore;
-import dev.langchain4j.store.embedding.redis.RedisEmbeddingStore;
+import dev.langchain4j.store.embedding.chroma.ChromaEmbeddingStore;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 
 /**
  * @author ziyao
@@ -41,9 +43,21 @@ public class RAGAutoConfiguration {
 
     @Bean
     public EmbeddingStore<TextSegment> embeddingStore() {
-        return RedisEmbeddingStore.builder()
-                .dimension(384)
+
+        // Chroma作为向量数据库
+
+        return ChromaEmbeddingStore
+                .builder()
+                .baseUrl("http://localhost:8000")
+                .collectionName(Utils.randomUUID())
+                .logRequests(true)
+                .logResponses(true)
                 .build();
+
+
+//        return RedisEmbeddingStore.builder()
+//                .dimension(384)
+//                .build();
     }
 
 
